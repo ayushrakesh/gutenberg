@@ -14,10 +14,7 @@ import { createUndoManager } from '@wordpress/undo-manager';
  * Internal dependencies
  */
 import { ifMatchingAction, replaceAction, parseEntityName } from './utils';
-import {
-	reducer as queriedDataReducer,
-	revisionsQueriedDataReducer,
-} from './queried-data';
+import { reducer as queriedDataReducer } from './queried-data';
 import { rootEntitiesConfig, DEFAULT_ENTITY_KEY } from './entities';
 
 /** @typedef {import('./types').AnyFunction} AnyFunction */
@@ -248,7 +245,10 @@ function entity( entityConfig ) {
 		} ),
 	] )(
 		combineReducers( {
-			queriedData: queriedDataReducer,
+			queriedData: ( state, action ) =>
+				action.type !== 'RECEIVE_ITEM_REVISIONS'
+					? queriedDataReducer( state, action )
+					: state,
 			edits: ( state = {}, action ) => {
 				switch ( action.type ) {
 					case 'RECEIVE_ITEMS':
@@ -361,7 +361,23 @@ function entity( entityConfig ) {
 
 			// Add revisions to the state tree if the post type supports it.
 			...( entityConfig?.supports?.revisions
-				? { revisions: revisionsQueriedDataReducer }
+				? {
+						revisions: ( state, action ) => {
+							if ( action.type === 'RECEIVE_ITEM_REVISIONS' ) {
+								const { key: parentId } = parseEntityName(
+									action.name
+								);
+								return {
+									...state,
+									[ parentId ]: queriedDataReducer(
+										state,
+										action
+									),
+								};
+							}
+							return state;
+						},
+				  }
 				: {} ),
 		} )
 	);
