@@ -13,7 +13,7 @@ import { createUndoManager } from '@wordpress/undo-manager';
 /**
  * Internal dependencies
  */
-import { ifMatchingAction, replaceAction, parseEntityName } from './utils';
+import { ifMatchingAction, replaceAction } from './utils';
 import { reducer as queriedDataReducer } from './queried-data';
 import { rootEntitiesConfig, DEFAULT_ENTITY_KEY } from './entities';
 
@@ -227,14 +227,13 @@ function entity( entityConfig ) {
 
 		// Limit to matching action type so we don't attempt to replace action on
 		// an unhandled action.
-		ifMatchingAction( ( action ) => {
-			return (
+		ifMatchingAction(
+			( action ) =>
 				action.name &&
 				action.kind &&
-				parseEntityName( action.name )?.name === entityConfig.name &&
+				action.name === entityConfig.name &&
 				action.kind === entityConfig.kind
-			);
-		} ),
+		),
 
 		// Inject the entity config into the action.
 		replaceAction( ( action ) => {
