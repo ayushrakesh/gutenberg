@@ -343,7 +343,6 @@ export const getEntityRecord = createSelector(
 		if ( ! queriedState ) {
 			return undefined;
 		}
-
 		const context = query?.context ?? 'default';
 
 		if ( query === undefined ) {
@@ -1374,7 +1373,7 @@ export function getCurrentThemeGlobalStylesRevisions(
  *
  * @return Record.
  */
-export const getEntityRevisions = (
+export const getRevisions = (
 	state: State,
 	kind: string,
 	name: string,
@@ -1403,7 +1402,7 @@ export const getEntityRevisions = (
  *
  * @return Record.
  */
-export const getEntityRevision = createSelector(
+export const getRevision = createSelector(
 	(
 		state: State,
 		kind: string,
@@ -1430,23 +1429,7 @@ export const getEntityRevision = createSelector(
 			return queriedRevisionsState.items[ context ][ key ];
 		}
 
-		const item = queriedRevisionsState.items[ context ]?.[ key ];
-
-		if ( item && query._fields ) {
-			const filteredItem = {};
-			const fields = getNormalizedCommaSeparable( query._fields ) ?? [];
-			for ( let f = 0; f < fields.length; f++ ) {
-				const field = fields[ f ].split( '.' );
-				let value = item;
-				field.forEach( ( fieldName ) => {
-					value = value?.[ fieldName ];
-				} );
-				setNestedValue( filteredItem, field, value );
-			}
-			return filteredItem;
-		}
-
-		return item;
+		return queriedRevisionsState.items[ context ]?.[ key ];
 	},
 	( state: State, kind, name, parentId, key, query ) => {
 		const context = query?.context ?? 'default';
@@ -1458,3 +1441,26 @@ export const getEntityRevision = createSelector(
 		];
 	}
 );
+
+/**
+ * Returns true if revisions have been received for the given set of parameters,
+ * or false otherwise.
+ *
+ *
+ * @param state    State tree
+ * @param kind     Entity kind.
+ * @param name     Entity name.
+ * @param parentId Record's key whose revisions you wish to fetch.
+ * @param query    Optional query. If requesting specific
+ *                 fields, fields must always include the ID. For valid query parameters see revisions schema in [the REST API Handbook](https://developer.wordpress.org/rest-api/reference/). Then see the arguments available "Retrieve a [Entity kind]".
+ * @return  Whether entity records have been received.
+ */
+export function hasRevisions(
+	state: State,
+	kind: string,
+	name: string,
+	parentId: EntityRecordKey,
+	query?: GetRecordsHttpQuery
+): boolean {
+	return Array.isArray( getRevisions( state, kind, name, parentId, query ) );
+}

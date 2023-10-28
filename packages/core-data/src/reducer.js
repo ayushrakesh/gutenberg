@@ -364,12 +364,9 @@ function entity( entityConfig ) {
 				? {
 						revisions: ( state, action ) => {
 							if ( action.type === 'RECEIVE_ITEM_REVISIONS' ) {
-								const { key: parentId } = parseEntityName(
-									action.name
-								);
 								return {
 									...state,
-									[ parentId ]: queriedDataReducer(
+									[ action.parentId ]: queriedDataReducer(
 										state,
 										action
 									),
